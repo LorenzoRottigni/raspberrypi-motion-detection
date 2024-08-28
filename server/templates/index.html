@@ -8,5 +8,11 @@
 <body>
     <h1>workstation.rottigni.tech</h1>
     <img src="{{ url_for('main.video_feed') }}" width="640" height="480">
+    <form action="/set_strategy/live">
+        <button type="submit">LIVE</button>
+    </form>
+    <form action="/set_strategy/motion_detection">
+        <button type="submit">MOTION_DETECTION</button>
+    </form>
 </body>
 </html>

@@ -1,6 +1,5 @@
 import cv2
 import time
-from flask import current_app
 from .detection import motion_detection
 
 def save_recording(frames, filename, frame_size, fps=10.0):
@@ -16,7 +15,10 @@ def save_recording(frames, filename, frame_size, fps=10.0):
         writer.write(frame)
     writer.release()
 
-def generate_frames():
+def generate_frames(
+        recording_strategy = 'live',
+        continuity_threshold = 5
+    ):
     cap = cv2.VideoCapture(0)
     ret, f1 = cap.read()
     if not ret:
@@ -37,9 +39,7 @@ def generate_frames():
         f2 = cv2.cvtColor(f2, cv2.COLOR_BGR2GRAY)
         strategy_satisfied = False
 
-        # Access application context safely
-        if current_app:
-            strategy_satisfied, f2 = motion_detection(f1, f2) if current_app.config['RECORDING_STRATEGY'] == 'motion_detection' else (False, f2)
+        strategy_satisfied, f2 = motion_detection(f1, f2) if recording_strategy == 'motion_detection' else (False, f2)
 
         if strategy_satisfied:
             if not recording:
@@ -48,7 +48,7 @@ def generate_frames():
                 print("Starting new recording.")
             recording_start_time = time.time()
             frames.append(f2)
-        elif recording and (time.time() - recording_start_time) < current_app.config.get('CONTINUITY_THRESHOLD', 5):
+        elif recording and (time.time() - recording_start_time) < continuity_threshold:
             frames.append(f2)
         else:
             if recording:
