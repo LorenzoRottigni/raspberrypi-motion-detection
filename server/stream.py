@@ -12,16 +12,16 @@ class Streamer:
     def boot(self, recording_strategy='live', continuity_threshold=5):
         cap = cv2.VideoCapture(0)
         ret, f1 = cap.read()
-        if not ret:
-            return
+        if not ret: return
         f1 = cv2.cvtColor(f1, cv2.COLOR_BGR2GRAY)
+
         while True:
             ret, f2 = cap.read()
-            if not ret:
-                break
+            if not ret: break
             f2 = cv2.cvtColor(f2, cv2.COLOR_BGR2GRAY)
             strategy_satisfied = False
             strategy_satisfied, f2 = motion_detection(f1, f2) if recording_strategy == 'motion_detection' else (False, f2)
+
             if strategy_satisfied:
                 if not self.recording:
                     self.recording = True
@@ -43,9 +43,10 @@ class Streamer:
                             print(f"Error saving recording: {e}")
                     self.frames = []
                     self.recording_start_time = None
+
             ret, buffer = cv2.imencode('.jpg', f2)
-            if not ret:
-                continue
+            if not ret: continue
+
             frame_bytes = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n') 

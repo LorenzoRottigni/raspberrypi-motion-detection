@@ -3,6 +3,8 @@ from .stream import Streamer
 
 main = Blueprint('main', __name__)
 
+stream = None
+streamer = None
 
 @main.route('/init')
 def init():
@@ -13,8 +15,8 @@ def init():
         int(current_app.config.get('CONTINUITY_THRESHOLD', 5))
     )
     return Response(
-        stream,
-        mimetype='multipart/x-mixed-replace; boundary=frame'
+        'true',
+        mimetype='text/plain'
     )
 
 @main.route('/')
@@ -24,10 +26,12 @@ def index():
 @main.route('/set_strategy/<strategy>')
 def set_strategy(strategy):
     current_app.config['RECORDING_STRATEGY'] = strategy
+    init()
     return f"Recording strategy set to {strategy}"
 
 @main.route('/feed')
 def feed():
+    if not stream: init()
     return Response(
         stream,
         mimetype='multipart/x-mixed-replace; boundary=frame'
@@ -35,6 +39,7 @@ def feed():
 
 @main.route('/stats')
 def stats():
+    if not stream: init()
     import json
     return Response(
         json.dumps({

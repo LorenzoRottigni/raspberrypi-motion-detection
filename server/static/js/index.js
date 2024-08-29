@@ -13,3 +13,11 @@ function setStrategy(strategy) {
         console.error('Error:', error);
     });
 }
+
+setInterval(() => {
+    fetch('/stats', {
+        method: 'GET'
+    })
+    .then(data => data.json())
+    .then(data => document.getElementById('stats').textContent = JSON.stringify(data))
+}, 2000)
