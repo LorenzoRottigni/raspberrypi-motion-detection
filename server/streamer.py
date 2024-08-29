@@ -9,7 +9,7 @@ class Streamer:
         self.recording_start_time = None
         self.frames = []
 
-    def boot(self, recording_strategy='live', continuity_threshold=5):
+    def stream(self, recording_strategy='live', continuity_threshold=5):
         cap = cv2.VideoCapture(0)
         ret, f1 = cap.read()
         if not ret: return

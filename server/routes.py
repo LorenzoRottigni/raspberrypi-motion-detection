@@ -1,23 +1,19 @@
 from flask import Blueprint, render_template, Response, current_app
-from .stream import Streamer
+from .streamer import Streamer
 
 main = Blueprint('main', __name__)
 
 stream = None
 streamer = None
 
-@main.route('/init')
-def init():
+def boot():
     global stream, streamer
     streamer = Streamer()
-    stream = streamer.boot(
+    stream = streamer.stream(
         current_app.config.get('RECORDING_STRATEGY', 'live'),
         int(current_app.config.get('CONTINUITY_THRESHOLD', 5))
     )
-    return Response(
-        'true',
-        mimetype='text/plain'
-    )
+    return True
 
 @main.route('/')
 def index():
@@ -26,12 +22,12 @@ def index():
 @main.route('/set_strategy/<strategy>')
 def set_strategy(strategy):
     current_app.config['RECORDING_STRATEGY'] = strategy
-    init()
+    boot()
     return f"Recording strategy set to {strategy}"
 
 @main.route('/feed')
 def feed():
-    if not stream: init()
+    if not stream: boot()
     return Response(
         stream,
         mimetype='multipart/x-mixed-replace; boundary=frame'
@@ -39,7 +35,7 @@ def feed():
 
 @main.route('/stats')
 def stats():
-    if not stream: init()
+    if not stream: boot()
     import json
     return Response(
         json.dumps({
