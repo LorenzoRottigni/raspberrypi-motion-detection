@@ -6,7 +6,6 @@ import { onMounted } from 'vue';
 import { useStream } from './store/stream';
 
 const $stream = useStream()
-
 onMounted(() => {
   $stream.setStatsInterval()
 })

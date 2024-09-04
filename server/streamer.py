@@ -2,7 +2,7 @@ import cv2
 import time
 from .detection import motion_detection
 from .export import export
-
+import numpy as np
 class Streamer:
     def __init__(self):
         self.recording = False
@@ -20,9 +20,17 @@ class Streamer:
             continuity_threshold
         )
 
+    def get_fallback_frame(self):
+        frame_width, frame_height = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH), self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        f = np.zeros((int(frame_height), int(frame_width), 1), dtype=np.uint8)
+        cv2.putText(f, "Failed to capture frame.", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        return f
+
     def stream_generator(self, recording_strategy='live', continuity_threshold=5):
         print(f"Starting a new video stream ({recording_strategy})...")
         self.cap = cv2.VideoCapture(0)
+        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         ret, f1 = self.cap.read()
         if not ret: return
         f1 = cv2.cvtColor(f1, cv2.COLOR_BGR2GRAY)
@@ -31,7 +39,7 @@ class Streamer:
         while self.capture:
             self.running = True
             ret, f2 = self.cap.read()
-            if not ret: break
+            if not ret: f2 = self.get_fallback_frame() # break
             f2 = cv2.cvtColor(f2, cv2.COLOR_BGR2GRAY)
             strategy_satisfied = False
             strategy_satisfied, f2 = motion_detection(f1, f2) if recording_strategy == 'motion_detection' else (False, f2)
