@@ -10,8 +10,11 @@ class Streamer:
         self.frames = []
         self.capture = False
         self.stream = None
+        self.cap = None
+        self.running = None
 
     def boot(self, strategy, continuity_threshold):
+        if (self.stream): self.close_stream()
         self.stream = self.stream_generator(
             strategy,
             continuity_threshold
@@ -19,14 +22,15 @@ class Streamer:
 
     def stream_generator(self, recording_strategy='live', continuity_threshold=5):
         print("Starting a new video stream...")
-        cap = cv2.VideoCapture(0)
-        ret, f1 = cap.read()
+        self.cap = cv2.VideoCapture(0)
+        ret, f1 = self.cap.read()
         if not ret: return
         f1 = cv2.cvtColor(f1, cv2.COLOR_BGR2GRAY)
         self.capture = True
 
         while self.capture:
-            ret, f2 = cap.read()
+            self.running = True
+            ret, f2 = self.cap.read()
             if not ret: break
             f2 = cv2.cvtColor(f2, cv2.COLOR_BGR2GRAY)
             strategy_satisfied = False
@@ -45,7 +49,7 @@ class Streamer:
                 if self.recording:
                     self.recording = False
                     if self.frames:
-                        filename = f"recording_{time.strftime('%Y-%m-%d_%H-%M-%S')}.avi"
+                        filename = f"data/recording_{time.strftime('%Y-%m-%d_%H-%M-%S')}.avi"
                         try:
                             export(self.frames, filename, (f2.shape[1], f2.shape[0]))
                             print(f"Recording saved to '{filename}'.")
@@ -62,17 +66,21 @@ class Streamer:
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n') 
             f1 = f2
 
-        cap.release()
+        self.close_stream()
 
     def close_stream(self):
-        self.capture = False
+        print("Closing stream...")
         if self.stream:
             try:
-                print("Consuming previous stream generator...")
-                list(self.stream)
+                # print("Consuming previous stream generator...")
+                # list(self.stream)
                 self.stream = None
+
             except Exception as e:
-                print(f"Error while closing the stream: {e}")
+                print(f"Error while closing the stream: {e}.")
+        self.capture = False
+        if self.cap.isOpened():
+            self.cap.release()
 
 
 
