@@ -8,14 +8,24 @@ class Streamer:
         self.recording = False
         self.recording_start_time = None
         self.frames = []
+        self.capture = False
+        self.stream = None
 
-    def stream(self, recording_strategy='live', continuity_threshold=5):
+    def boot(self, strategy, continuity_threshold):
+        self.stream = self.stream_generator(
+            strategy,
+            continuity_threshold
+        )
+
+    def stream_generator(self, recording_strategy='live', continuity_threshold=5):
+        print("Starting a new video stream...")
         cap = cv2.VideoCapture(0)
         ret, f1 = cap.read()
         if not ret: return
         f1 = cv2.cvtColor(f1, cv2.COLOR_BGR2GRAY)
+        self.capture = True
 
-        while True:
+        while self.capture:
             ret, f2 = cap.read()
             if not ret: break
             f2 = cv2.cvtColor(f2, cv2.COLOR_BGR2GRAY)
@@ -53,6 +63,16 @@ class Streamer:
             f1 = f2
 
         cap.release()
+
+    def close_stream(self):
+        self.capture = False
+        if self.stream:
+            try:
+                print("Consuming previous stream generator...")
+                list(self.stream)
+                self.stream = None
+            except Exception as e:
+                print(f"Error while closing the stream: {e}")
 
 
 
