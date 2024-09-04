@@ -21,7 +21,7 @@ class Streamer:
         )
 
     def stream_generator(self, recording_strategy='live', continuity_threshold=5):
-        print("Starting a new video stream...")
+        print(f"Starting a new video stream ({recording_strategy})...")
         self.cap = cv2.VideoCapture(0)
         ret, f1 = self.cap.read()
         if not ret: return

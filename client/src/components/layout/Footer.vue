@@ -4,9 +4,11 @@ import EntityRecognition from '@/components/icons/EntityRecognition.vue';
 import Live from '@/components/icons/Live.vue';
 import MotionDetection from '@/components/icons/MotionDetection.vue';
 import Record from '@/components/icons/Record.vue';
-import { ref } from 'vue';
+import { useStream } from '@/store/stream';
+import { storeToRefs } from 'pinia';
 
-const source = ref('http://localhost:5000/feed')
+const $stream = useStream()
+const { stats } = storeToRefs($stream)
 
 const strategies = [
   {
@@ -36,20 +38,18 @@ const strategies = [
   },
 ]
 
-function setStrategy(strategy: Strategy) {
-  fetch(`/set_strategy/${strategy}`)
-    .then(() => {
-        source.value = `${source.value.split('?')[0]}?t=${new Date().getTime()}`;
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-}
+
 </script>
 
 <template>
 <footer>
-    <button v-for="(strategy, index) in strategies" :key="`strategy-${index}`" @click="setStrategy(strategy.name)">
+    <button
+      v-for="(strategy, index) in strategies"
+      :key="`strategy-${index}`"
+      :disabled="stats?.strategy === strategy.name"
+      :class="stats?.strategy === strategy.name ? 'active' : ''"
+      @click="$stream.setStrategy(strategy.name)"
+    >
       {{ strategy.label }}
       <component :is="strategy.icon" />
     </button>
@@ -73,5 +73,22 @@ button {
     width: 100%;
     padding: .5rem 1rem;
     background-color: #E6E8E6;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    font-weight: bold;
+}
+
+button.active {
+  background-color: #B47EB3;
+  cursor: auto;
+  color: black;
+}
+
+svg {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 </style>
